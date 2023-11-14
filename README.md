@@ -35,6 +35,7 @@ AccountingGPTmom 是一个基于 React Native 的移动应用项目。
      ```sh
      npm install -g react-native-cli
      ```
+     
 
 3. **安装 Android Studio**：
    - 访问 [Android Studio 官网](https://developer.android.com/studio) 并下载安装。
@@ -99,6 +100,13 @@ AccountingGPTmom 是一个基于 React Native 的移动应用项目。
      ```sh
      npm install
      ```
+## 安装额外依赖
+
+   - 本项目使用 `@react-native-voice/voice` 来实现语音识别功能。安装此依赖，请运行：
+
+   ```sh
+   npm install @react-native-voice/voice
+   ```
 
 ## 运行应用
 
