@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import Voice from '@react-native-voice/voice';
 import axios from 'axios';
-
+const API_KEY = process.env.OPENAI_API_KEY;
 const App = () => {
   const [text, setText] = useState('123');
   const [isListening, setIsListening] = useState(false);
@@ -72,7 +72,7 @@ const App = () => {
         },
         {
           headers: {
-            'Authorization': `Bearer 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`,
+            'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json'
           }
         }
