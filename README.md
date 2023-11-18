@@ -107,6 +107,11 @@ AccountingGPTmom 是一个基于 React Native 的移动应用项目。
    ```sh
    npm install @react-native-voice/voice
    ```
+- 本项目使用 `axios` 来实现API發送功能。安装此依赖，请运行：
+
+   ```sh
+   npm install axios
+   ```
 
 ## 运行应用
 
