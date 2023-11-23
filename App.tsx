@@ -1,112 +1,79 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import Voice from '@react-native-voice/voice';
-import axios from 'axios';
-const API_KEY = process.env.OPENAI_API_KEY;
+import * as React from 'react';
+
+//核心套件的安裝
+import { SafeAreaProvider } from 'react-native-safe-area-context'; //輔助空間能安全響應的套件
+import { NavigationContainer } from '@react-navigation/native'; //創造彈性空間的套件
+import { createMaterialBottomTabNavigator } from 'react-native-paper/react-navigation'; //創造核心功能的套件，但被paper套件影響樣式
+
+//導覽樣式的設定
+import { Provider as PaperProvider } from 'react-native-paper'; //設計出MD3樣式
+import customTheme from './component/PaperTheme' //MD3樣式下製作主題色的自定義
+import Icon from 'react-native-vector-icons/MaterialIcons'; //MD3的icon們導入
+import { LogoIcon } from './component/CustomIocn'; //自定義icon導入
+
+//頁面的連接導入（後續變成Route或SPA的策略還在想）
+import VoiceScreen from './page/VoiceScreen';
+import ChatScreen from './page/ChatScreen';
+import EditCalendarScreen from './page/EditCalendarScreen';
+import SettingsScreen from './page/SettingsScreen';
+
+
+const Tab = createMaterialBottomTabNavigator();
+
 const App = () => {
-  const [text, setText] = useState('123');
-  const [isListening, setIsListening] = useState(false);
-  function getGMT8Time() {
-    const now = new Date();
-    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const gmt8Time = new Date(utcTime + (3600000 * 8));
-    return gmt8Time.toISOString().replace('Z', '+08:00');
-  }
-
-  const startListening = () => {
-    Voice.start('zh-TW');
-    setIsListening(true);
-  };
-
-  const stopListening = () => {
-    Voice.stop();
-    setIsListening(false);
-  };
-  const createGptJson = (
-    classify: string,
-    content: string,
-    time: string,
-    cost: string | number,talk:string) => {
-    return {
-      classify_list: "早餐,午餐,晚餐,其他",
-      classify: classify,
-      content: content,
-      time: time,
-      cost: cost,
-      talk:talk
-    };
-  };
-
-  const createuserJson =(time:string,request:string,username:string)=>{
-    return{
-      time: time,
-      request: request,
-      username:username
-    };
-  };
-  const handleOnSpeechResults = (e: any) => {
-    if (e.value && e.value.length > 0) {
-      setText(e.value[0]);
-      sendTextToChatGPT(e.value[0]);
-    }
-  };
-
-  const sendTextToChatGPT = async (inputText: string) => {
-    const gptJson = createGptJson( "項目(僅在classify_list中選擇)", "內容(依request的內容推測)", "時間(依提request及time的內容推測)", "金額(依request的內容推測)","回復(對(依request的內容做出母親角色的回覆)");
-    const gptJsonString = JSON.stringify(gptJson);
-   
-  
-    try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: "gpt-3.5-turbo",
-          messages: [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "你現在將扮演一個關心子女的溫柔母親，以關懷的方式關心他，並以返回一個json的方式幫助他記帳，json格式為${gptJsonString}"},
-            {"role": "assistant", "content": "好的，我將扮演一個稱職的母親，會已返回一個  ${gptJsonString}  的方式幫助我的子女記帳"},
-            {"role": "user", "content": JSON.stringify(createuserJson("2023-11-18T12:00:00.000+D08:00","我剛剛吃了麥當勞一百五","jack"))},
-            {"role": "assistant", "content": JSON.stringify(createGptJson("午餐", "麥當勞", "2023-11-18T12:00:00.000+D08:00", "150","哎呀，大中午就吃速食，要多注意身體喔"))},
-            {"role": "user", "content":JSON.stringify(createuserJson(getGMT8Time(),inputText,"jack"))}
-          ]
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-  
-      Alert.alert('ChatGPT Response', response.data.choices[0].message.content);
-    } catch (error) {
-      console.error('Error making API request:', error);
-      Alert.alert('Error', 'Failed to get response from ChatGPT');
-    }
-  };
-
-  useEffect(() => {
-    Voice.onSpeechResults = handleOnSpeechResults;
-
-    return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
-    };
-  }, []);
-
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <TouchableOpacity
-        onLongPress={startListening}
-        onPressOut={stopListening}
-        style={{ backgroundColor: 'blue', padding: 20 }}
-      >
-        <Text style={{ color: 'black' }}>{isListening ? 'Listening...' : 'Long Press to Speak'}</Text>
-      </TouchableOpacity>
-      <Text style={{ marginTop: 20, color: 'red' }}>{text}</Text>
-   
-
-   
-    </View>
+    <PaperProvider theme={customTheme}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Tab.Navigator
+          barStyle={{ backgroundColor: '#FFFBE2' }} // 更改導覽列背景色
+          activeColor="#1A1A1A" // 更改選中標籤的文字和圖標顏色
+          inactiveColor="#1A1A1A" // 更改未選中標籤的文字和圖標顏色
+          >
+            <Tab.Screen
+              name="Voice"
+              component={VoiceScreen}
+              options={{ 
+                tabBarLabel: '嘴巴大師',
+                tabBarIcon: () => (
+                  <LogoIcon />
+                )
+                , }}
+            />
+            <Tab.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={{ 
+                tabBarLabel: '對話紀錄',
+                tabBarIcon: () => (
+                  <Icon name="chat" color="#1A1A1A" size={24} />
+              )
+              ,}}
+            />
+            <Tab.Screen
+              name="Edit"
+              component={EditCalendarScreen}
+              options={{
+                tabBarLabel: '記事本',
+                tabBarIcon: () => (
+                  <Icon name="edit-calendar" color="#1A1A1A" size={24} />
+                )
+                , }}
+            />
+            <Tab.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{
+                tabBarLabel: '系統設定',
+                tabBarIcon: () => (
+                  <Icon name="settings" color="#1A1A1A" size={24} />
+              )
+              , }}
+            />
+          </Tab.Navigator>
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 };
 
