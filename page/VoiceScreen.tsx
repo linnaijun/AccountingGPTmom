@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import Voice from '@react-native-voice/voice';
 import axios from 'axios';
-const API_KEY = process.env.OPENAI_API_KEY;
+import RNFS from 'react-native-fs';
+import Papa from 'papaparse';
+import Config from 'react-native-config';
+
+const API_KEY = Config.OPENAI_API_KEY;
+console.log(API_KEY);
 const VoiceScreen = () => {
   const [text, setText] = useState('123');
   const [isListening, setIsListening] = useState(false);
@@ -13,7 +18,10 @@ const VoiceScreen = () => {
     const gmt8Time = new Date(utcTime + (3600000 * 8));
     return gmt8Time.toISOString().replace('Z', '+08:00');
   }
-
+  const [showText, setShowText] = useState(false);
+  const [apiResponse, setApiResponse] = useState('');
+  const [showApiResponse, setShowApiResponse] = useState(false);
+  const path = RNFS.DocumentDirectoryPath + '/data.txt';
   const startListening = () => {
     Voice.start('zh-TW');
     setIsListening(true);
@@ -27,15 +35,43 @@ const VoiceScreen = () => {
     classify: string,
     content: string,
     time: string,
-    cost: string | number,talk:string) => {
+    cost: string | number,
+    usertalk:string,
+    talk: string
+  ): GptJsonData => {
     return {
-      classify_list: "早餐,午餐,晚餐,其他",
-      classify: classify,
-      content: content,
-      time: time,
-      cost: cost,
-      talk:talk
+      classify_list: "早餐/午餐/晚餐/飲料/交通/消費/娛樂/居家/3C/收入/醫療/學習/其他",
+      classify,
+      content,
+      time,
+      cost,
+      usertalk,
+      talk
     };
+  };
+  interface GptJsonData {
+    classify_list: string;
+    classify: string;
+    content: string;
+    time: string;
+    cost: string | number;
+    usertalk:string;
+    talk: string;
+  }
+  const appendJsonToTextFile = async (jsonData:GptJsonData) => {
+    // 将 JSON 数据转换为字符串
+    const jsonString = JSON.stringify(jsonData) + '\n'; // 在每个 JSON 后加上换行符
+  
+    // 检查文件是否存在
+    const fileExists = await RNFS.exists(path);
+  
+    if (fileExists) {
+      // 文件存在，追加内容
+      await RNFS.appendFile(path, jsonString, 'utf8');
+    } else {
+      // 文件不存在，创建文件并写入内容
+      await RNFS.writeFile(path, jsonString, 'utf8');
+    }
   };
 
   const createuserJson =(time:string,request:string,username:string)=>{
@@ -48,12 +84,14 @@ const VoiceScreen = () => {
   const handleOnSpeechResults = (e: any) => {
     if (e.value && e.value.length > 0) {
       setText(e.value[0]);
+      setShowText(true); // 显示文本
+      setShowApiResponse(false); // 隐藏API响应
       sendTextToChatGPT(e.value[0]);
     }
   };
 
   const sendTextToChatGPT = async (inputText: string) => {
-    const gptJson = createGptJson( "項目(僅在classify_list中選擇)", "內容(依request的內容推測)", "時間(依提request及time的內容推測)", "金額(依request的內容推測)","回復(對(依request的內容做出母親角色的回覆)");
+    const gptJson = createGptJson( "項目(僅在classify_list中選擇)", "內容(依request的內容推測，若無法推測就以項目內容填寫)", "時間(依提request及time的內容推測)", "金額(依request的內容推測)","使用者指令(不做修改)","回復(對(依request的內容做出母親角色的回覆)");
     const gptJsonString = JSON.stringify(gptJson);
    
   
@@ -63,12 +101,18 @@ const VoiceScreen = () => {
         {
           model: "gpt-3.5-turbo",
           messages: [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "你現在將扮演一個關心子女的溫柔母親，以關懷的方式關心他，並以返回一個json的方式幫助他記帳，json格式為${gptJsonString}"},
-            {"role": "assistant", "content": "好的，我將扮演一個稱職的母親，會已返回一個  ${gptJsonString}  的方式幫助我的子女記帳"},
-            {"role": "user", "content": JSON.stringify(createuserJson("2023-11-18T12:00:00.000+D08:00","我剛剛吃了麥當勞一百五","jack"))},
-            {"role": "assistant", "content": JSON.stringify(createGptJson("午餐", "麥當勞", "2023-11-18T12:00:00.000+D08:00", "150","哎呀，大中午就吃速食，要多注意身體喔"))},
-            {"role": "user", "content":JSON.stringify(createuserJson(getGMT8Time(),inputText,"jack"))}
+            {"role": "system", "content": "You have to respond in json format"},
+            {"role": "user", "content": "你現在將扮演一隻會說話的貓，雖然關心主人，但需要以一種愛理不理的語氣回復，為了貓的面子，你雖然無時無刻關心主人的身體及經濟狀況，但必須表現得以自己中心並假裝沒有那麼在乎。在語尾或開頭，加入'喵' 來表現出你是一隻貓，並以返回一個繁體中文內容的json的方式幫助他記帳，json格式為${gptJsonString}"},
+            {"role": "assistant", "content": "好的，我將扮演一個負責記帳的貓，會返回一個  ${gptJsonString}  的方式幫助我的主人記帳，並使用繁體中文對話"},
+            {"role": "user", "content": JSON.stringify(createuserJson("2023-11-18T12:00:00.000+D08:00","我剛剛吃了麥當勞一百五","主人"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("午餐", "麥當勞", "2023-11-18T12:00:00.000+D08:00", "150","我剛剛吃了麥當勞一百五","怎麼吃了速食，這樣搞壞身體要怎麼照顧我喵..."))},
+            {"role": "user", "content": JSON.stringify(createuserJson("2023-11-20T18:20:00.000+D08:00","我在新光三越買了一個八千五百的包包","主人"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("消費", "包包", "2023-11-20T18:20:00.000+D08:00", "8500","我在新光三越買了一個八千五百的包包","喵!花這麼多錢，有沒有給我帶點吃的喵"))},
+            {"role": "user", "content": JSON.stringify(createuserJson("2023-06-30T08:32:00.000+D08:00","我剛剛去找了朋友","主人"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("其他", "找朋友", "2023-06-30T08:32:00.000+D08:00", "0","我剛剛去找了朋友","我現在很困，沒有要記帳不用找我喵"))},
+            {"role": "user", "content": JSON.stringify(createuserJson("2023-11-25T08:15:28.896+08:00","我剛吃了500塊","主人"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("早餐", "早餐", "2023-11-25T08:15:28.896+08:00", "500","我剛吃了500塊","喵！吃了500塊？現在早上八點，你是說你剛剛吃早餐喵？"))},
+            {"role": "user", "content":JSON.stringify(createuserJson(getGMT8Time(),inputText,"主人"))}
           ]
         },
         {
@@ -78,13 +122,25 @@ const VoiceScreen = () => {
           }
         }
       );
-  
-      Alert.alert('ChatGPT Response', response.data.choices[0].message.content);
-    } catch (error) {
-      console.error('Error making API request:', error);
-      Alert.alert('Error', 'Failed to get response from ChatGPT');
-    }
-  };
+      
+         const content = response.data.choices[0].message.content;
+         const jsonData = JSON.parse(content);
+         await appendJsonToTextFile(jsonData);
+         try {
+          const jsonResponse = JSON.parse(content);
+          setApiResponse(jsonResponse.talk); // 设置响应内容
+          setShowApiResponse(true); // 显示响应
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+          Alert.alert('Error', 'Failed to parse response from ChatGPT');
+        }
+      } catch (error) {
+        console.error('Error making API request:', error);
+        Alert.alert('Error', 'Failed to get response from ChatGPT');
+      }
+    
+      setShowText(false); // 收到回复后隐藏文本
+    };
 
   useEffect(() => {
     Voice.onSpeechResults = handleOnSpeechResults;
@@ -93,7 +149,15 @@ const VoiceScreen = () => {
       Voice.destroy().then(Voice.removeAllListeners);
     };
   }, []);
-
+  useEffect(() => {
+    if (showApiResponse) {
+      const timer = setTimeout(() => {
+        setShowApiResponse(false);
+      }, 30000);
+  
+      return () => clearTimeout(timer);
+    }
+  }, [showApiResponse]);
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <TouchableOpacity
@@ -103,9 +167,17 @@ const VoiceScreen = () => {
       >
         <Text style={{ color: 'black' }}>{isListening ? 'Listening...' : 'Long Press to Speak'}</Text>
       </TouchableOpacity>
-      <Text style={{ marginTop: 20, color: 'red' }}>{text}</Text>
-   
-
+      
+      {showText && (
+      <View style={{ position: 'absolute', bottom: 50, backgroundColor: '#dddddd', padding: 10, borderRadius: 5 }}>
+        <Text style={{ color: 'black' }}>{text}</Text>
+      </View>
+    )}
+    {showApiResponse && (
+      <View style={{ position: 'absolute', top: 50, backgroundColor: '#eeeeee', padding: 10, borderRadius: 5 }}>
+        <Text style={{ color: 'black' }}>{apiResponse}</Text>
+      </View>
+    )}
    
     </View>
   );
