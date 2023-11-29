@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView,StyleSheet } from 'react-native';
 import RNFS from 'react-native-fs';
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 type Item = {
   time: string;
   classify: string;
@@ -45,6 +47,13 @@ const EditCalendarScreen = () => {
 
   return (
     <View style={{ flex: 1 }}>
+      <View style={styles.title}>
+        <View style={styles.space}></View>
+        <Text style={styles.title_text}>
+          2023年10月 
+        </Text>
+        <Icon name="event-note" size={24} color="#000" style={styles.icon} />
+      </View>
       <View style={styles.header}>
         <View style={styles.column}><Text>時間</Text></View>
         <View style={styles.column}><Text>項目</Text></View>
@@ -66,6 +75,26 @@ const EditCalendarScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  title: {
+    flexDirection: 'row',
+    height: 64,
+    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor:'#fffbe2',
+  },
+  title_text: {
+    fontSize: 22,
+    fontFamily: 'Roboto',
+    color :'#1c1b1f'
+  },
+  space: {
+    paddingLeft: 40
+  },
+  icon: {
+    paddingTop: 10,
+    paddingRight: 16
+  },
   header: {
     flexDirection: 'row',
     padding: 10,

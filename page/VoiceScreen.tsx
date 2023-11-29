@@ -1,11 +1,12 @@
 //等候迺鈞，把先前版本做copy
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ImageBackground, Image } from 'react-native';
 import Voice from '@react-native-voice/voice';
 import axios from 'axios';
-import RNFS from 'react-native-fs';
+import RNFS, { stat } from 'react-native-fs';
 import Papa from 'papaparse';
 import Config from 'react-native-config';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const API_KEY = Config.OPENAI_API_KEY;
 console.log(API_KEY);
@@ -159,28 +160,72 @@ const VoiceScreen = () => {
     }
   }, [showApiResponse]);
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <TouchableOpacity
-        onLongPress={startListening}
-        onPressOut={stopListening}
-        style={{ backgroundColor: 'lightblue', padding: 20 }}
-      >
-        <Text style={{ color: 'black' }}>{isListening ? 'Listening...' : 'Long Press to Speak'}</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <ImageBackground source={require('../img/background.png')} style={styles.bgimage}>
+        <Image style={styles.role} source = {require('../img/role_cat.png')} />
+        <TouchableOpacity
+          onLongPress={startListening}
+          onPressOut={stopListening}
+          activeOpacity={0.8}
+          style={styles.listenbtn}
+        >
+          <View style={styles.mic}>
+            <Icon name="mic" size={50} style={styles.mic_icon} />
+          </View>
+          <Text style={styles.mic_text}>{isListening ? 'Listening...' : 'Long Press to Speak'}</Text>
+        </TouchableOpacity>
+        
+        {showText && (
+        <View style={{ position: 'absolute', bottom: 50, backgroundColor: '#dddddd', padding: 10, borderRadius: 5 }}>
+          <Text style={{ color: 'black' }}>{text}</Text>
+        </View>
+      )}
+      {showApiResponse && (
+        <View style={{ position: 'absolute', top: 50, backgroundColor: '#eeeeee', padding: 10, borderRadius: 5 }}>
+          <Text style={{ color: 'black' }}>{apiResponse}</Text>
+        </View>
+      )}
+      </ImageBackground>
       
-      {showText && (
-      <View style={{ position: 'absolute', bottom: 50, backgroundColor: '#dddddd', padding: 10, borderRadius: 5 }}>
-        <Text style={{ color: 'black' }}>{text}</Text>
-      </View>
-    )}
-    {showApiResponse && (
-      <View style={{ position: 'absolute', top: 50, backgroundColor: '#eeeeee', padding: 10, borderRadius: 5 }}>
-        <Text style={{ color: 'black' }}>{apiResponse}</Text>
-      </View>
-    )}
    
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  bgimage: {
+    flex: 1,
+    resizeMode: 'cover',
+    alignItems: 'center',
+  },
+  role: {
+    position: 'absolute',
+    top: 150,
+    left: 10
+  },
+  listenbtn: {
+    position: 'absolute',
+    bottom: 100,
+    alignItems: 'center',
+  },
+  mic: {
+    height: 100,
+    width: 100,
+    backgroundColor: '#7db3ef',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mic_icon: {
+    color: "#fff"
+  },
+  mic_text: {
+    color: '#000'
+  }
+
+});
 
 export default VoiceScreen;
