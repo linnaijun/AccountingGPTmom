@@ -175,12 +175,15 @@ const VoiceScreen = () => {
           <Text style={styles.mic_text}>{isListening ? '' : ''}</Text>
         </TouchableOpacity>
         {showText && (
-          <View style={{ position: 'absolute', bottom: 150, backgroundColor: '#dddddd', padding: 10, borderRadius: 5 }}>
-            <Text style={{ color: 'black' }}>{text}</Text>
+          <View style={styles.user_input}>
+            <Image style={styles.chat_img} source={require('../img/messageUser.png')} />
+            <Icon name="settings-voice" size={25} style={styles.input_mic} />
+            <Text style={styles.input_text}>{text}</Text>
           </View>
         )}
         {showApiResponse && (
-          <View style={{ position: 'absolute', top: 50, backgroundColor: '#eeeeee', padding: 10, borderRadius: 5 }}>
+          <View style={styles.gpt_response}>
+            <Image style={styles.chat_img} source={require('../img/messageGPT.png')}/>
             <Text style={{ color: 'black' }}>{apiResponse}</Text>
           </View>
         )}
@@ -225,8 +228,47 @@ const styles = StyleSheet.create({
   },
   mic_text: {
     color: '#000'
-  }
-
+  },
+  user_input: {
+    position: 'absolute',
+    bottom: 150,
+    maxWidth: '90%',
+    backgroundColor: '#d2e0fb',
+    padding: 18,
+    paddingRight: 23,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 7,
+  },
+  chat_img: {
+    position: 'absolute',
+    bottom: -15,
+    right: 20,
+  },
+  input_mic: {
+    color: '#000',
+    marginRight: 5,
+    marginLeft: -5,
+  },
+  input_text: {
+    color: '#000',
+    fontSize: 14,
+    fontFamily: 'Roboto',
+    fontWeight: 'medium',
+    maxWidth: '89%',
+  },
+  gpt_response: {
+    position: 'absolute',
+    top: 30,
+    maxWidth: '90%',
+    backgroundColor: '#fffbe2',
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 7,
+    elevation: 2,
+    zIndex: 1,
+  },
 });
 
 export default VoiceScreen;
