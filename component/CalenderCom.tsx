@@ -35,11 +35,28 @@ LocaleConfig.locales['fr'] = {
 };
 
 LocaleConfig.defaultLocale = 'fr';
+interface CalendarComProps {
+  onDateSelect: (date: string) => void;
+}
+interface Day {
+  dateString: string;
+  // 根據需要，這裡可以添加更多的屬性
+}
 
 
-const CalendarCom = () => {
+const CalendarCom: React.FC<CalendarComProps> = ({ onDateSelect }) => {
   const [selected, setSelected] = useState('');
-  
+
+  const handleDayPress = (day: Day) => {
+    console.log('selected day', day);
+    setSelected(day.dateString);
+
+    // 調用從父組件傳過來的 onDateSelect 函數
+    if (onDateSelect) {
+      onDateSelect(day.dateString);
+    }
+  };
+
   return (
     <Calendar
       // Callback that gets called when the user selects a day
