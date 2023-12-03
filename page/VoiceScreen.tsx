@@ -161,7 +161,7 @@ const VoiceScreen = () => {
   }, [showApiResponse]);
   return (
     <View style={styles.container}>
-      <ImageBackground source={require('../img/background.png')} style={styles.bgimage}>
+      <ImageBackground source={require('../img/background.png')} style={styles.bgimage} resizeMode='cover' >
         <Image style={styles.role} source = {require('../img/role_cat.png')} />
         <TouchableOpacity
           onLongPress={startListening}
@@ -172,19 +172,18 @@ const VoiceScreen = () => {
           <View style={styles.mic}>
             <Icon name="mic" size={50} style={styles.mic_icon} />
           </View>
-          <Text style={styles.mic_text}>{isListening ? 'Listening...' : 'Long Press to Speak'}</Text>
+          <Text style={styles.mic_text}>{isListening ? '' : ''}</Text>
         </TouchableOpacity>
-        
         {showText && (
-        <View style={{ position: 'absolute', bottom: 50, backgroundColor: '#dddddd', padding: 10, borderRadius: 5 }}>
-          <Text style={{ color: 'black' }}>{text}</Text>
-        </View>
-      )}
-      {showApiResponse && (
-        <View style={{ position: 'absolute', top: 50, backgroundColor: '#eeeeee', padding: 10, borderRadius: 5 }}>
-          <Text style={{ color: 'black' }}>{apiResponse}</Text>
-        </View>
-      )}
+          <View style={{ position: 'absolute', bottom: 150, backgroundColor: '#dddddd', padding: 10, borderRadius: 5 }}>
+            <Text style={{ color: 'black' }}>{text}</Text>
+          </View>
+        )}
+        {showApiResponse && (
+          <View style={{ position: 'absolute', top: 50, backgroundColor: '#eeeeee', padding: 10, borderRadius: 5 }}>
+            <Text style={{ color: 'black' }}>{apiResponse}</Text>
+          </View>
+        )}
       </ImageBackground>
       
    
@@ -198,7 +197,7 @@ const styles = StyleSheet.create({
   },
   bgimage: {
     flex: 1,
-    resizeMode: 'cover',
+    height: 800,
     alignItems: 'center',
   },
   role: {
@@ -208,7 +207,7 @@ const styles = StyleSheet.create({
   },
   listenbtn: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 0,
     alignItems: 'center',
   },
   mic: {
@@ -216,6 +215,8 @@ const styles = StyleSheet.create({
     width: 100,
     backgroundColor: '#7db3ef',
     borderRadius: 50,
+    borderColor: '#D2E0FB',
+    borderWidth: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },
