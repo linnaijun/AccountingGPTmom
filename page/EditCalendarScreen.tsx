@@ -120,7 +120,14 @@ const formatMonth = (month:string) => {
         <Text style={styles.header_text2}>支出 {totalExpense}</Text>
       </View>
   
-      {showList ? <CalendarCom onDateSelect={(date) => setSelectedDate(date)} /> : null}
+      {showList ? 
+    <CalendarCom 
+        onDateSelect={(date) => {
+            console.log("Selected Date: ", date);  // 在此处添加日志
+            setSelectedDate(date);
+        }} 
+    /> 
+: null}
   
       <ScrollView style={styles.content}>
         <View>

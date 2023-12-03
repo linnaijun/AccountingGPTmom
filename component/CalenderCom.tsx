@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {Calendar, LocaleConfig} from 'react-native-calendars';
 
 LocaleConfig.locales['fr'] = {
@@ -45,13 +45,24 @@ interface Day {
 
 
 const CalendarCom: React.FC<CalendarComProps> = ({ onDateSelect }) => {
+  // 初始化當日日期
   const [selected, setSelected] = useState('');
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setSelected(today);
+    if (onDateSelect) {
+      onDateSelect(today);
+    }
+  }, []);
 
-  const handleDayPress = (day: Day) => {
+  // 更新當日日期的標記
+  const markedDates = {
+    [selected]: {selected: true, disableTouchEvent: true, color: '#3176C1'}
+  };
+
+  const handleDayPress = (day) => {
     console.log('selected day', day);
     setSelected(day.dateString);
-
-    // 調用從父組件傳過來的 onDateSelect 函數
     if (onDateSelect) {
       onDateSelect(day.dateString);
     }
