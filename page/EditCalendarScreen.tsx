@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView,StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import RNFS from 'react-native-fs';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -12,14 +12,14 @@ type Item = {
   cost: string;
 };
 
-
 const EditCalendarScreen = () => {
+  const [allItems, setAllItems] = useState<Item[]>([]); // 用於存儲從文檔中讀取的所有項目
   const [items, setItems] = useState<Item[]>([]);
   const [showList, setShowList] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7)); // 格式為 "YYYY-MM"
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7));
   const [totalIncome, setTotalIncome] = useState(0);
   const [totalExpense, setTotalExpense] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10)); // 格式為 "YYYY-MM-DD"
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
   const loadItems = async () => {
     const path = RNFS.DocumentDirectoryPath + '/data.txt';
@@ -28,11 +28,10 @@ const EditCalendarScreen = () => {
       const lines = fileContents.trim().split('\n');
     
       const parsedItems = lines.map(line => {
-        console.log('Line:', line); // 查看每行的內容
         const data = JSON.parse(line);
         const dateTimeParts = data.time.split('T');
-        const datePart = dateTimeParts[0]; // 只提取日期部分
-        const timePart = dateTimeParts[1].split('.')[0]; // 時間部分
+        const datePart = dateTimeParts[0];
+        const timePart = dateTimeParts[1].split('.')[0];
         return {
           time: datePart + ' ' + timePart,
           classify: data.classify,
@@ -41,15 +40,19 @@ const EditCalendarScreen = () => {
         };
       });
   
-      // 根據日曆的開啟狀態選擇過濾方式
-      const filterDate = showList ? selectedDate : currentMonth;
-      const itemsFiltered = parsedItems.filter(item => 
-        item.time.split(' ')[0].startsWith(filterDate) && item.cost !== '0'
-      );
-      
+      setAllItems(parsedItems);
+    } catch (error) {
+      console.error('Failed to read file:', error);
+    }
+  };
+
+  useEffect(() => {
+    const filterDate = showList ? selectedDate : currentMonth;
+    const itemsFiltered = allItems.filter(item => 
+      item.time.split(' ')[0].startsWith(filterDate) && item.cost !== '0'
+    );
   
-      // 計算當月總收入和總支出
-      let income = 0;
+    let income = 0;
     let expense = 0;
     itemsFiltered.forEach(item => {
       const cost = parseFloat(item.cost);
@@ -61,51 +64,47 @@ const EditCalendarScreen = () => {
         }
       }
     });
-      setItems(itemsFiltered);
-      setTotalIncome(income);
-      setTotalExpense(expense);
+    setItems(itemsFiltered);
+    setTotalIncome(income);
+    setTotalExpense(expense);
+  }, [selectedDate, currentMonth, allItems, showList]); // 加入 showList 作為依賴項
   
-    } catch (error) {
-      console.error('Failed to read file:', error);
-    }
-  };
-  
-  
-  
-const changeMonth = (offset:number) => {
-  const newMonth = new Date(currentMonth);
-  newMonth.setMonth(newMonth.getMonth() + offset);
-  setCurrentMonth(newMonth.toISOString().slice(0, 7));
-};
-const formatCost = (cost:string) => {
-  return cost === "" ? "0" : cost;
-};
 
-const formatMonth = (month:string) => {
-  const date = new Date(month);
-  return `${date.getFullYear()}年${date.getMonth() + 1}月`;
-};
   useFocusEffect(
     React.useCallback(() => {
       loadItems();
     }, [])
   );
-  useEffect(() => {
-    loadItems();
-  }, [selectedDate, currentMonth]);
+  const changeMonth = (offset:number) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() + offset);
+    setCurrentMonth(newMonth.toISOString().slice(0, 7));
+  };
+  const formatCost = (cost:string) => {
+    return cost === "" ? "0" : cost;
+  };
+  
+  const formatMonth = (month:string) => {
+    const date = new Date(month);
+    return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+  };
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.title}>
         <View style={styles.space}></View>
-        <TouchableOpacity onPress={() => changeMonth(-1)}>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.title_text}>
-          {formatMonth(currentMonth)}
-        </Text>
-        <TouchableOpacity onPress={() => changeMonth(1)}>
-          <Icon name="arrow-forward" size={24} color="#000" />
-        </TouchableOpacity>
+        {!showList && (
+  <>
+    <TouchableOpacity onPress={() => changeMonth(-1)}>
+      <Icon name="arrow-back" size={24} color="#000" />
+    </TouchableOpacity>
+    <Text style={styles.title_text}>
+      {formatMonth(currentMonth)}
+    </Text>
+    <TouchableOpacity onPress={() => changeMonth(1)}>
+      <Icon name="arrow-forward" size={24} color="#000" />
+    </TouchableOpacity>
+  </>
+)}
         <TouchableOpacity onPress={() => setShowList(showList === true ? false : true)}>
           <Icon
             name={showList ? "event-note" : "list-alt"}
@@ -123,7 +122,7 @@ const formatMonth = (month:string) => {
       {showList ? 
     <CalendarCom 
         onDateSelect={(date) => {
-            console.log("Selected Date: ", date);  // 在此处添加日志
+            console.log("Selected Date123: ", date);  // 在此处添加日志
             setSelectedDate(date);
         }} 
     /> 

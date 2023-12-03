@@ -45,8 +45,9 @@ interface Day {
 
 
 const CalendarCom: React.FC<CalendarComProps> = ({ onDateSelect }) => {
-  // 初始化當日日期
   const [selected, setSelected] = useState('');
+
+  // 初始化當日日期
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setSelected(today);
@@ -55,30 +56,25 @@ const CalendarCom: React.FC<CalendarComProps> = ({ onDateSelect }) => {
     }
   }, []);
 
-  // 更新當日日期的標記
-  const markedDates = {
-    [selected]: {selected: true, disableTouchEvent: true, color: '#3176C1'}
-  };
-
-  const handleDayPress = (day) => {
-    console.log('selected day', day);
+  // 当选择某一天时调用的函数
+  const handleDayPress = (day: Day) => {
+    console.log('Selected day', day.dateString);  // 记录选择的日期
     setSelected(day.dateString);
     if (onDateSelect) {
       onDateSelect(day.dateString);
     }
   };
 
+  // 更新當日日期的標記
+  const markedDates = {
+    [selected]: {selected: true, disableTouchEvent: true, color: '#3176C1'}
+  };
+
   return (
     <Calendar
-      // Callback that gets called when the user selects a day
-      onDayPress={day => {
-        console.log('selected day', day);
-        setSelected(day.dateString);
-      }}
-      markingType={'period'}
-      markedDates={{
-        [selected]: {selected: true, disableTouchEvent: true, color: '#3176C1'},
-      }}
+    onDayPress={handleDayPress}  // 正确引用 handleDayPress 函数
+    markingType={'period'}
+    markedDates={markedDates}
       monthFormat={'yyyy MMM'}
       theme={{
         backgroundColor: '#ffffff',
