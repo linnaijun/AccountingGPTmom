@@ -112,6 +112,15 @@ AccountingGPTmom 是一个基于 React Native 的移动应用项目。
    ```sh
    npm install axios
    ```
+   ```sh
+   nnpm install react-native-config --save
+   ```
+   ```sh
+   npm install react-native-fs papaparse
+   ```
+   ```sh
+   npm install --save-dev @types/papaparse
+   ```
 
 ## 运行应用
 
