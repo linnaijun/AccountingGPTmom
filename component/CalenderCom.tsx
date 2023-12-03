@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {Calendar, LocaleConfig} from 'react-native-calendars';
 
 LocaleConfig.locales['fr'] = {
@@ -35,11 +35,39 @@ LocaleConfig.locales['fr'] = {
 };
 
 LocaleConfig.defaultLocale = 'fr';
+interface CalendarComProps {
+  onDateSelect: (date: string) => void;
+}
+interface Day {
+  dateString: string;
+  // 根據需要，這裡可以添加更多的屬性
+}
 
 
-const CalendarCom = () => {
+const CalendarCom: React.FC<CalendarComProps> = ({ onDateSelect }) => {
+  // 初始化當日日期
   const [selected, setSelected] = useState('');
-  
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setSelected(today);
+    if (onDateSelect) {
+      onDateSelect(today);
+    }
+  }, []);
+
+  // 更新當日日期的標記
+  const markedDates = {
+    [selected]: {selected: true, disableTouchEvent: true, color: '#3176C1'}
+  };
+
+  const handleDayPress = (day:Day) => {
+    console.log('selected day', day);
+    setSelected(day.dateString);
+    if (onDateSelect) {
+      onDateSelect(day.dateString);
+    }
+  };
+
   return (
     <Calendar
       // Callback that gets called when the user selects a day

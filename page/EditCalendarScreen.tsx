@@ -16,85 +16,139 @@ type Item = {
 const EditCalendarScreen = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [showList, setShowList] = useState(true);
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7)); // 格式為 "YYYY-MM"
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10)); // 格式為 "YYYY-MM-DD"
 
   const loadItems = async () => {
     const path = RNFS.DocumentDirectoryPath + '/data.txt';
     try {
       const fileContents = await RNFS.readFile(path);
       const lines = fileContents.trim().split('\n');
-      const parsedItems = lines
-        .map(line => {
-          const data = JSON.parse(line);
-          return {
-            time: data.time.split('T')[0], // 只获取日期部分
-            classify: data.classify,
-            content: data.content,
-            cost: data.cost,
-          };
-        })
-        .filter(item => item.cost !== '0'); // 过滤掉金額为0的项目
+    
+      const parsedItems = lines.map(line => {
+        console.log('Line:', line); // 查看每行的內容
+        const data = JSON.parse(line);
+        const dateTimeParts = data.time.split('T');
+        const datePart = dateTimeParts[0]; // 只提取日期部分
+        const timePart = dateTimeParts[1].split('.')[0]; // 時間部分
+        return {
+          time: datePart + ' ' + timePart,
+          classify: data.classify,
+          content: data.content,
+          cost: data.cost,
+        };
+      });
   
-      setItems(parsedItems);
+      // 根據日曆的開啟狀態選擇過濾方式
+      const filterDate = showList ? selectedDate : currentMonth;
+      const itemsFiltered = parsedItems.filter(item => 
+        item.time.split(' ')[0].startsWith(filterDate) && item.cost !== '0'
+      );
+      
+  
+      // 計算當月總收入和總支出
+      let income = 0;
+    let expense = 0;
+    itemsFiltered.forEach(item => {
+      const cost = parseFloat(item.cost);
+      if (!isNaN(cost)) {
+        if (item.classify === '收入') {
+          income += cost;
+        } else {
+          expense += cost;
+        }
+      }
+    });
+      setItems(itemsFiltered);
+      setTotalIncome(income);
+      setTotalExpense(expense);
+  
     } catch (error) {
       console.error('Failed to read file:', error);
     }
   };
   
+  
+  
+const changeMonth = (offset:number) => {
+  const newMonth = new Date(currentMonth);
+  newMonth.setMonth(newMonth.getMonth() + offset);
+  setCurrentMonth(newMonth.toISOString().slice(0, 7));
+};
+const formatCost = (cost:string) => {
+  return cost === "" ? "0" : cost;
+};
 
+const formatMonth = (month:string) => {
+  const date = new Date(month);
+  return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+};
   useFocusEffect(
     React.useCallback(() => {
       loadItems();
     }, [])
   );
-
+  useEffect(() => {
+    loadItems();
+  }, [selectedDate, currentMonth]);
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.title}>
         <View style={styles.space}></View>
+        <TouchableOpacity onPress={() => changeMonth(-1)}>
+          <Icon name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
         <Text style={styles.title_text}>
-          2023年10月 
+          {formatMonth(currentMonth)}
         </Text>
-        <TouchableOpacity onPress={()=>setShowList(showList === true ? false : true)}>
+        <TouchableOpacity onPress={() => changeMonth(1)}>
+          <Icon name="arrow-forward" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setShowList(showList === true ? false : true)}>
           <Icon
-            name={showList?"event-note":"list-alt"} 
-            size={24} 
-            color="#000" 
+            name={showList ? "event-note" : "list-alt"}
+            size={24}
+            color="#000"
             style={styles.icon}
           />
         </TouchableOpacity>
       </View>
       <View style={styles.header}>
-        <Text style={styles.header_text1}>收入 500</Text>
-        <Text style={styles.header_text2}>支出 500</Text>
+        <Text style={styles.header_text1}>收入 {totalIncome}</Text>
+        <Text style={styles.header_text2}>支出 {totalExpense}</Text>
       </View>
+  
+      {showList ? <CalendarCom onDateSelect={(date) => setSelectedDate(date)} /> : null}
+  
       <ScrollView style={styles.content}>
-        {showList ?
-          <View>
-            {items.map((item, index) => (
-              <View key={index}>
-                <View style={styles.list}>
-                  <View style={styles.list_left}>
-                    <Icon name="fastfood" size={30} style={styles.list_icon}/>
-                    <View style={styles.list_left_text}>
-                      <Text style={styles.list_category}>{item.classify}</Text>
-                      <Text style={styles.list_content}>{item.content}  |  今天的花費</Text>
-                    </View>
-                  </View>
-                  <View style={styles.list_right}>
-                    <Text style={styles.list_time}>10/04（三）12:00p.m.{item.time}</Text>
-                    <Text style={styles.list_cost}>-${item.cost}</Text>
+        <View>
+          {items.map((item, index) => (
+            <View key={index}>
+              <View style={styles.list}>
+                <View style={styles.list_left}>
+                  <Icon name="fastfood" size={30} style={styles.list_icon}/>
+                  <View style={styles.list_left_text}>
+                    <Text style={styles.list_category}>{item.classify}</Text>
+                    <Text style={styles.list_content}>{item.content}</Text>
                   </View>
                 </View>
-                <View style={styles.line}></View>
+                <View style={styles.list_right}>
+                  <Text style={styles.list_time}>{item.time}</Text>
+                  <Text style={styles.list_cost}>
+                    {item.classify === '收入' ? formatCost(item.cost) : `-${formatCost(item.cost)}`}
+                  </Text>
+                </View>
               </View>
-            ))}
-          </View>
-        : <CalendarCom />}
+              <View style={styles.line}></View>
+            </View>
+          ))}
+        </View>
       </ScrollView>
-      
     </View>
   );
-};
+};  
 
 const styles = StyleSheet.create({
   title: {
