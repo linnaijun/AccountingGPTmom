@@ -161,8 +161,8 @@ const EditCalendarScreen = () => {
               case '其他':
                 iconName = "local-atm";
                 break;
-                default:
-    iconName = "error"; // Default icon name
+              default:
+                iconName = "error"; // Default icon name
             }
             return (
               <View key={index}>
@@ -176,8 +176,8 @@ const EditCalendarScreen = () => {
                   </View>
                   <View style={styles.list_right}>
                     <Text style={styles.list_time}>{item.time}</Text>
-                    <Text style={styles.list_amount}>
-                      {item.classify === '收入' ? formatamount(item.amount) : `-$${formatamount(item.amount)}`}
+                    <Text style={item.classify === '收入' ? styles.list_amount2 : styles.list_amount1}>
+                      {item.classify === '收入' ? `+$${formatamount(item.amount)}` : `-$${formatamount(item.amount)}`}
                     </Text>
                   </View>
                 </View>
@@ -279,8 +279,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Roboto',
   },
-  list_amount: {
+  list_amount1: {
     color: '#3176c1',
+    fontSize: 28,
+    fontFamily: 'Roboto',
+    fontWeight: 'bold',
+  },
+  list_amount2: {
+    color: '#EF5533',
     fontSize: 28,
     fontFamily: 'Roboto',
     fontWeight: 'bold',
