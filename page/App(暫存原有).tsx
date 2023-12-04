@@ -28,7 +28,7 @@ const App = () => {
     time: string,
     cost: string | number,talk:string) => {
     return {
-      classify_list: "早餐,午餐,晚餐,其他",
+      classify_list: "飲食,服飾,交通,票券,日用,醫療,電話,收入,其他",
       classify: classify,
       content: content,
       time: time,

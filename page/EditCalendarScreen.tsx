@@ -1,42 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView,StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import RNFS from 'react-native-fs';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import CalendarCom from '../component/CalenderCom';
 
 type Item = {
   time: string;
   classify: string;
   content: string;
-  cost: string;
+  amount: string;
 };
 
 const EditCalendarScreen = () => {
+  const [allItems, setAllItems] = useState<Item[]>([]); // 用於存儲從文檔中讀取的所有項目
   const [items, setItems] = useState<Item[]>([]);
-
+  const [showList, setShowList] = useState(true);
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
   const loadItems = async () => {
     const path = RNFS.DocumentDirectoryPath + '/data.txt';
     try {
       const fileContents = await RNFS.readFile(path);
       const lines = fileContents.trim().split('\n');
-      const parsedItems = lines
-        .map(line => {
-          const data = JSON.parse(line);
-          return {
-            time: data.time.split('T')[0], // 只获取日期部分
-            classify: data.classify,
-            content: data.content,
-            cost: data.cost,
-          };
-        })
-        .filter(item => item.cost !== '0'); // 过滤掉金額为0的项目
+    
+      const parsedItems = lines.map(line => {
+        const data = JSON.parse(line);
+        const dateTimeParts = data.time.split('T');
+        const datePart = dateTimeParts[0];
+        const timePart = dateTimeParts[1].split('.')[0];
+        return {
+          time: datePart + ' ' + timePart,
+          classify: data.classify,
+          content: data.content,
+          amount: data.amount,
+        };
+      });
   
-      setItems(parsedItems);
+      setAllItems(parsedItems);
     } catch (error) {
       console.error('Failed to read file:', error);
     }
   };
+
+  useEffect(() => {
+    const filterDate = showList ? selectedDate : currentMonth;
+    const itemsFiltered = allItems.filter(item => 
+      item.time.split(' ')[0].startsWith(filterDate) && item.amount !== '0'
+    );
+  
+    let income = 0;
+    let expense = 0;
+    itemsFiltered.forEach(item => {
+      const amount = parseFloat(item.amount);
+      if (!isNaN(amount)) {
+        if (item.classify === '收入') {
+          income += amount;
+        } else {
+          expense += amount;
+        }
+      }
+    });
+    setItems(itemsFiltered);
+    setTotalIncome(income);
+    setTotalExpense(expense);
+  }, [selectedDate, currentMonth, allItems, showList]); // 加入 showList 作為依賴項
   
 
   useFocusEffect(
@@ -44,35 +75,122 @@ const EditCalendarScreen = () => {
       loadItems();
     }, [])
   );
+  const changeMonth = (offset:number) => {
+    const newMonth = new Date(currentMonth);
+    newMonth.setMonth(newMonth.getMonth() + offset);
+    setCurrentMonth(newMonth.toISOString().slice(0, 7));
+  };
+  const formatamount = (amount:string) => {
+    return amount === "" ? "0" : amount;
+  };
+  
+  const formatMonth = (month:string) => {
+    const date = new Date(month);
+    return `${date.getFullYear()}年${date.getMonth() + 1}月`;
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.title}>
         <View style={styles.space}></View>
-        <Text style={styles.title_text}>
-          2023年10月 
-        </Text>
-        <Icon name="event-note" size={24} color="#000" style={styles.icon} />
+        {!showList && (
+  <>
+    <TouchableOpacity onPress={() => changeMonth(-1)}>
+      <Icon name="arrow-back" size={24} color="#000" />
+    </TouchableOpacity>
+    <Text style={styles.title_text}>
+      {formatMonth(currentMonth)}
+    </Text>
+    <TouchableOpacity onPress={() => changeMonth(1)}>
+      <Icon name="arrow-forward" size={24} color="#000" />
+    </TouchableOpacity>
+  </>
+)}
+        <TouchableOpacity onPress={() => setShowList(showList === true ? false : true)}>
+          <Icon
+            name={showList ? "event-note" : "list-alt"}
+            size={24}
+            color="#000"
+            style={styles.icon}
+          />
+        </TouchableOpacity>
       </View>
       <View style={styles.header}>
-        <View style={styles.column}><Text>時間</Text></View>
-        <View style={styles.column}><Text>項目</Text></View>
-        <View style={styles.column}><Text>內容</Text></View>
-        <View style={styles.column}><Text>金額</Text></View>
+        <Text style={styles.header_text1}>收入 {totalIncome}</Text>
+        <Text style={styles.header_text2}>支出 {totalExpense}</Text>
       </View>
+  
+      {showList ? 
+    <CalendarCom 
+        onDateSelect={(date) => {
+            console.log("Selected Date123: ", date);  // 在此处添加日志
+            setSelectedDate(date);
+        }} 
+    /> 
+: null}
+  
       <ScrollView style={styles.content}>
-        {items.map((item, index) => (
-          <View key={index} style={styles.item}>
-            <View style={styles.column}><Text>{item.time}</Text></View>
-            <View style={styles.column}><Text>{item.classify}</Text></View>
-            <View style={styles.column}><Text>{item.content}</Text></View>
-            <View style={styles.column}><Text>{item.cost}</Text></View>
-          </View>
-        ))}
+        <View>
+          {items.map((item, index) => {
+            let iconName;
+            switch (item.classify) {
+              case '飲食':
+                iconName = "fastfood";
+                break;
+              case '服飾':
+                iconName = "checkroom";
+                break;
+              case '交通':
+                iconName = "directions-bus";
+                break;
+              case '票券':
+                iconName = "local-activity";
+                break;
+              case '日用':
+                iconName = "shopping-cart";
+                break;
+              case '醫療':
+                iconName = "local-hospital";
+                break;
+              case '電話':
+                iconName = "perm-phone-msg";
+                break;
+              case '收入':
+                iconName = "savings";
+                break;
+              case '其他':
+                iconName = "local-atm";
+                break;
+                default:
+    iconName = "error"; // Default icon name
+            }
+            return (
+              <View key={index}>
+                <View style={styles.list}>
+                  <View style={styles.list_left}>
+                    <Icon name={iconName} size={30} style={styles.list_icon}/>
+                    <View style={styles.list_left_text}>
+                      <Text style={styles.list_category}>{item.classify}</Text>
+                      <Text style={styles.list_content}>{item.content}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.list_right}>
+                    <Text style={styles.list_time}>{item.time}</Text>
+                    <Text style={styles.list_amount}>
+                      {item.classify === '收入' ? formatamount(item.amount) : `-$${formatamount(item.amount)}`}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.line}></View>
+              </View>
+            );
+          })}
+
+        </View>
       </ScrollView>
     </View>
   );
-};
+};  
 
 const styles = StyleSheet.create({
   title: {
@@ -96,24 +214,86 @@ const styles = StyleSheet.create({
     paddingRight: 16
   },
   header: {
+    height: 30,
     flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#eee',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd'
+    backgroundColor: '#7DB3EF',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingRight: 15,
+  },
+  header_text1: {
+    fontSize: 12,
+    fontFamily: 'Inter',
+    color: '#fff',
+    marginRight: 5,
+  },
+  header_text2: {
+    fontSize: 12,
+    fontFamily: 'Inter',
+    color: '#fff',
   },
   content: {
-    flex: 1
+    flex: 1,
+    backgroundColor: '#fff',
   },
-  item: {
+  list: {
+    height: 65,
+    width: '100%',
+    paddingLeft: 16,
+    paddingRight: 16,
+    paddingTop: 11,
     flexDirection: 'row',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    justifyContent: 'space-between',
   },
-  column: {
-    flex: 1, // 平均分配空间
-    alignItems: 'center'
+  list_left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  list_icon: {
+    color: '#000',
+    marginRight: 6,
+  },
+  list_left_text: {
+    justifyContent: 'space-between',
+    marginTop: -3,
+    marginBottom: -3,
+  },
+  list_category: {
+    color: '#3176c1',
+    fontSize: 12,
+    fontFamily: 'Inter',
+    fontWeight: 'bold',
+  },
+  list_content: {
+    color: '#777777'
+  },
+  list_right: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginTop: -3,
+    marginBottom: 12
+  },
+  list_time: {
+    color: '#777777',
+    fontSize: 10,
+    fontFamily: 'Roboto',
+  },
+  list_amount: {
+    color: '#3176c1',
+    fontSize: 28,
+    fontFamily: 'Roboto',
+    fontWeight: 'bold',
+  },
+  line: {
+    height: 1,
+    width: '100%',
+    backgroundColor: '#e0e9ee',
+  },
+  test: {
+    height: 50,
+    width: 50,
+    backgroundColor: '#777777'
   }
 });
 export default EditCalendarScreen;

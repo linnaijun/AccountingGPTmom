@@ -54,7 +54,7 @@ const App = () => {
               name="Edit"
               component={EditCalendarScreen}
               options={{
-                tabBarLabel: '記事本',
+                tabBarLabel: '記帳本',
                 tabBarIcon: () => (
                   <Icon name="edit-calendar" color="#1A1A1A" size={24} />
                 )
