@@ -88,6 +88,7 @@ const EditCalendarScreen = () => {
     const date = new Date(month);
     return `${date.getFullYear()}年${date.getMonth() + 1}月`;
   };
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.title}>
@@ -130,26 +131,59 @@ const EditCalendarScreen = () => {
   
       <ScrollView style={styles.content}>
         <View>
-          {items.map((item, index) => (
-            <View key={index}>
-              <View style={styles.list}>
-                <View style={styles.list_left}>
-                  <Icon name="fastfood" size={30} style={styles.list_icon}/>
-                  <View style={styles.list_left_text}>
-                    <Text style={styles.list_category}>{item.classify}</Text>
-                    <Text style={styles.list_content}>{item.content}</Text>
+          {items.map((item, index) => {
+            let iconName;
+            switch (item.classify) {
+              case '飲食':
+                iconName = "fastfood";
+                break;
+              case '服飾':
+                iconName = "checkroom";
+                break;
+              case '交通':
+                iconName = "directions-bus";
+                break;
+              case '票券':
+                iconName = "local-activity";
+                break;
+              case '日用':
+                iconName = "shopping-cart";
+                break;
+              case '醫療':
+                iconName = "local-hospital";
+                break;
+              case '電話':
+                iconName = "perm-phone-msg";
+                break;
+              case '收入':
+                iconName = "savings";
+                break;
+              case '其他':
+                iconName = "local-atm";
+                break;
+            }
+            return (
+              <View key={index}>
+                <View style={styles.list}>
+                  <View style={styles.list_left}>
+                    <Icon name={iconName} size={30} style={styles.list_icon}/>
+                    <View style={styles.list_left_text}>
+                      <Text style={styles.list_category}>{item.classify}</Text>
+                      <Text style={styles.list_content}>{item.content}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.list_right}>
+                    <Text style={styles.list_time}>{item.time}</Text>
+                    <Text style={styles.list_cost}>
+                      {item.classify === '收入' ? formatCost(item.cost) : `-$${formatCost(item.cost)}`}
+                    </Text>
                   </View>
                 </View>
-                <View style={styles.list_right}>
-                  <Text style={styles.list_time}>{item.time}</Text>
-                  <Text style={styles.list_cost}>
-                    {item.classify === '收入' ? formatCost(item.cost) : `-${formatCost(item.cost)}`}
-                  </Text>
-                </View>
+                <View style={styles.line}></View>
               </View>
-              <View style={styles.line}></View>
-            </View>
-          ))}
+            );
+          })}
+
         </View>
       </ScrollView>
     </View>

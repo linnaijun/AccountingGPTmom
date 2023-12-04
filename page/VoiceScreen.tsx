@@ -41,7 +41,7 @@ const VoiceScreen = () => {
     talk: string
   ): GptJsonData => {
     return {
-      classify_list: "早餐/午餐/晚餐/飲料/交通/消費/娛樂/居家/3C/收入/醫療/學習/其他",
+      classify_list: "飲食/服飾/交通/票券/日用/醫療/電話/收入/其他",
       classify,
       content,
       time,
@@ -106,13 +106,13 @@ const VoiceScreen = () => {
             {"role": "user", "content": "你現在將扮演一隻會說話的貓，雖然關心主人，但需要以一種愛理不理的語氣回復，為了貓的面子，你雖然無時無刻關心主人的身體及經濟狀況，但必須表現得以自己中心並假裝沒有那麼在乎。在語尾或開頭，加入'喵' 來表現出你是一隻貓，並以返回一個繁體中文內容的json的方式幫助他記帳，json格式為${gptJsonString}"},
             {"role": "assistant", "content": "好的，我將扮演一個負責記帳的貓，會返回一個  ${gptJsonString}  的方式幫助我的主人記帳，並使用繁體中文對話"},
             {"role": "user", "content": JSON.stringify(createuserJson("2023-11-18T12:00:00.000+D08:00","我剛剛吃了麥當勞一百五","主人"))},
-            {"role": "assistant", "content": JSON.stringify(createGptJson("午餐", "麥當勞", "2023-11-18T12:00:00.000+D08:00", "150","我剛剛吃了麥當勞一百五","怎麼吃了速食，這樣搞壞身體要怎麼照顧我喵..."))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("飲食", "麥當勞", "2023-11-18T12:00:00.000+D08:00", "150","我剛剛吃了麥當勞一百五","怎麼吃了速食，這樣搞壞身體要怎麼照顧我喵..."))},
             {"role": "user", "content": JSON.stringify(createuserJson("2023-11-20T18:20:00.000+D08:00","我在新光三越買了一個八千五百的包包","主人"))},
-            {"role": "assistant", "content": JSON.stringify(createGptJson("消費", "包包", "2023-11-20T18:20:00.000+D08:00", "8500","我在新光三越買了一個八千五百的包包","喵!花這麼多錢，有沒有給我帶點吃的喵"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("服飾", "包包", "2023-11-20T18:20:00.000+D08:00", "8500","我在新光三越買了一個八千五百的包包","喵!花這麼多錢，有沒有給我帶點吃的喵"))},
             {"role": "user", "content": JSON.stringify(createuserJson("2023-06-30T08:32:00.000+D08:00","我剛剛去找了朋友","主人"))},
             {"role": "assistant", "content": JSON.stringify(createGptJson("其他", "找朋友", "2023-06-30T08:32:00.000+D08:00", "0","我剛剛去找了朋友","我現在很困，沒有要記帳不用找我喵"))},
             {"role": "user", "content": JSON.stringify(createuserJson("2023-11-25T08:15:28.896+08:00","我剛吃了500塊","主人"))},
-            {"role": "assistant", "content": JSON.stringify(createGptJson("早餐", "早餐", "2023-11-25T08:15:28.896+08:00", "500","我剛吃了500塊","喵！吃了500塊？現在早上八點，你是說你剛剛吃早餐喵？"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("飲食", "早餐", "2023-11-25T08:15:28.896+08:00", "500","我剛吃了500塊","喵！吃了500塊？現在早上八點，你是說你剛剛吃早餐喵？"))},
             {"role": "user", "content":JSON.stringify(createuserJson(getGMT8Time(),inputText,"主人"))}
           ]
         },
