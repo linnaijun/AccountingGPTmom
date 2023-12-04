@@ -36,7 +36,7 @@ const VoiceScreen = () => {
     classify: string,
     content: string,
     time: string,
-    cost: string | number,
+    amount: string | number,
     usertalk:string,
     talk: string
   ): GptJsonData => {
@@ -45,7 +45,7 @@ const VoiceScreen = () => {
       classify,
       content,
       time,
-      cost,
+      amount,
       usertalk,
       talk
     };
@@ -55,7 +55,7 @@ const VoiceScreen = () => {
     classify: string;
     content: string;
     time: string;
-    cost: string | number;
+    amount: string | number;
     usertalk:string;
     talk: string;
   }
@@ -90,7 +90,15 @@ const VoiceScreen = () => {
       sendTextToChatGPT(e.value[0]);
     }
   };
-
+  const isValidGptJsonData = (data: any): data is GptJsonData => {
+    return typeof data.classify_list === 'string' &&
+           typeof data.classify === 'string' &&
+           typeof data.content === 'string' &&
+           typeof data.time === 'string' &&
+           (typeof data.amount === 'string' || typeof data.amount === 'number') &&
+           typeof data.usertalk === 'string' &&
+           typeof data.talk === 'string';
+  };
   const sendTextToChatGPT = async (inputText: string) => {
     const gptJson = createGptJson( "項目(僅在classify_list中選擇)", "內容(依request的內容推測，若無法推測就以項目內容填寫)", "時間(依提request及time的內容推測)", "金額(依request的內容推測)","使用者指令(不做修改)","回復(對(依request的內容做出母親角色的回覆)");
     const gptJsonString = JSON.stringify(gptJson);
@@ -105,6 +113,8 @@ const VoiceScreen = () => {
             {"role": "system", "content": "You have to respond in json format"},
             {"role": "user", "content": "你現在將扮演一隻會說話的貓，雖然關心主人，但需要以一種愛理不理的語氣回復，為了貓的面子，你雖然無時無刻關心主人的身體及經濟狀況，但必須表現得以自己中心並假裝沒有那麼在乎。在語尾或開頭，加入'喵' 來表現出你是一隻貓，並以返回一個繁體中文內容的json的方式幫助他記帳，json格式為${gptJsonString}"},
             {"role": "assistant", "content": "好的，我將扮演一個負責記帳的貓，會返回一個  ${gptJsonString}  的方式幫助我的主人記帳，並使用繁體中文對話"},
+            {"role": "user", "content": JSON.stringify(createuserJson("2023-11-25T08:15:28.896+08:00","買了一台電腦花兩萬","主人"))},
+            {"role": "assistant", "content": JSON.stringify(createGptJson("日用", "電腦", "2023-11-25T08:15:28.896+08:00", "20000","買了一台電腦花兩萬","喵！看來他要成為我的暖爐了喵？"))},
             {"role": "user", "content": JSON.stringify(createuserJson("2023-11-18T12:00:00.000+D08:00","我剛剛吃了麥當勞一百五","主人"))},
             {"role": "assistant", "content": JSON.stringify(createGptJson("飲食", "麥當勞", "2023-11-18T12:00:00.000+D08:00", "150","我剛剛吃了麥當勞一百五","怎麼吃了速食，這樣搞壞身體要怎麼照顧我喵..."))},
             {"role": "user", "content": JSON.stringify(createuserJson("2023-11-20T18:20:00.000+D08:00","我在新光三越買了一個八千五百的包包","主人"))},
@@ -126,7 +136,11 @@ const VoiceScreen = () => {
       
          const content = response.data.choices[0].message.content;
          const jsonData = JSON.parse(content);
-         await appendJsonToTextFile(jsonData);
+         if (isValidGptJsonData(jsonData)) {
+          await appendJsonToTextFile(jsonData);
+        } else {
+          console.error("Invalid data format");
+        }
          try {
           const jsonResponse = JSON.parse(content);
           setApiResponse(jsonResponse.talk); // 设置响应内容

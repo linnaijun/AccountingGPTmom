@@ -9,7 +9,7 @@ type Item = {
   time: string;
   classify: string;
   content: string;
-  cost: string;
+  amount: string;
 };
 
 const EditCalendarScreen = () => {
@@ -36,7 +36,7 @@ const EditCalendarScreen = () => {
           time: datePart + ' ' + timePart,
           classify: data.classify,
           content: data.content,
-          cost: data.cost,
+          amount: data.amount,
         };
       });
   
@@ -49,18 +49,18 @@ const EditCalendarScreen = () => {
   useEffect(() => {
     const filterDate = showList ? selectedDate : currentMonth;
     const itemsFiltered = allItems.filter(item => 
-      item.time.split(' ')[0].startsWith(filterDate) && item.cost !== '0'
+      item.time.split(' ')[0].startsWith(filterDate) && item.amount !== '0'
     );
   
     let income = 0;
     let expense = 0;
     itemsFiltered.forEach(item => {
-      const cost = parseFloat(item.cost);
-      if (!isNaN(cost)) {
+      const amount = parseFloat(item.amount);
+      if (!isNaN(amount)) {
         if (item.classify === '收入') {
-          income += cost;
+          income += amount;
         } else {
-          expense += cost;
+          expense += amount;
         }
       }
     });
@@ -80,8 +80,8 @@ const EditCalendarScreen = () => {
     newMonth.setMonth(newMonth.getMonth() + offset);
     setCurrentMonth(newMonth.toISOString().slice(0, 7));
   };
-  const formatCost = (cost:string) => {
-    return cost === "" ? "0" : cost;
+  const formatamount = (amount:string) => {
+    return amount === "" ? "0" : amount;
   };
   
   const formatMonth = (month:string) => {
@@ -161,6 +161,8 @@ const EditCalendarScreen = () => {
               case '其他':
                 iconName = "local-atm";
                 break;
+                default:
+    iconName = "error"; // Default icon name
             }
             return (
               <View key={index}>
@@ -174,8 +176,8 @@ const EditCalendarScreen = () => {
                   </View>
                   <View style={styles.list_right}>
                     <Text style={styles.list_time}>{item.time}</Text>
-                    <Text style={styles.list_cost}>
-                      {item.classify === '收入' ? formatCost(item.cost) : `-$${formatCost(item.cost)}`}
+                    <Text style={styles.list_amount}>
+                      {item.classify === '收入' ? formatamount(item.amount) : `-$${formatamount(item.amount)}`}
                     </Text>
                   </View>
                 </View>
@@ -277,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: 'Roboto',
   },
-  list_cost: {
+  list_amount: {
     color: '#3176c1',
     fontSize: 28,
     fontFamily: 'Roboto',
